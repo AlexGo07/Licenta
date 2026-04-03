@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={manrope.variable}>
-      <body className="min-h-screen overflow-x-hidden">{children}</body>
+    <html lang="en" className={manrope.variable} suppressHydrationWarning>
+      <body className="min-h-screen overflow-x-hidden" suppressHydrationWarning>{children}</body>        
     </html>
   );
 }

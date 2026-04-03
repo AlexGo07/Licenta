@@ -186,7 +186,7 @@ function GlobeModel({
   const currentRomaniaScaleRef = useRef(1);
 
   const { scene: globeScene } = useGLTF("/globe.glb");
-  const { scene: romaniaScene } = useGLTF("/romania.glb");
+  const { scene: romaniaScene } = useGLTF("/Romania.glb");
   const currentSpin = useRef(0);
 
   // --- HARDCODED ANIMATION PHASES ---
@@ -382,7 +382,7 @@ function GlobeModel({
 }
 
 useGLTF.preload("/globe.glb");
-useGLTF.preload("/romania.glb");
+useGLTF.preload("/Romania.glb");
 
 export function ScrollGlobe({
   storyState,
