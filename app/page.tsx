@@ -1,65 +1,109 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { FigurinesSides } from "@/components/FigurinesSides";
+import { ScrollGlobe } from "@/components/ScrollGlobe";
+import { StarsBackground } from "@/components/animate/backgrounds/stars";
+
+type StoryState = "idle" | "spreading" | "readyToClean" | "cleaning" | "cleaned";
 
 export default function Home() {
+  const [storyState, setStoryState] = useState<StoryState>("idle");
+  const [mapReady, setMapReady] = useState(false);
+
+  const handleFigurineTrigger = () => {
+    setStoryState("spreading");
+  };
+
+  const handleMapFullyInfected = () => {
+    setStoryState((current) => (current === "spreading" ? "readyToClean" : current));
+  };
+
+  const handleMapCleaned = () => {
+    setStoryState("cleaned");
+  };
+
+  const handleActionButtonClick = () => {
+    if (storyState === "readyToClean") {
+      setStoryState("cleaning");
+      return;
+    }
+
+    if (storyState === "cleaned") {
+      setStoryState("idle");
+    }
+  };
+
+  const showActionButton =
+    mapReady && (storyState === "readyToClean" || storyState === "cleaning" || storyState === "cleaned");
+
+  const actionButtonLabel =
+    storyState === "cleaning"
+      ? "Cleaning with AI..."
+      : storyState === "cleaned"
+        ? "Start over"
+        : "Activate AI Filter";
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <div className="pointer-events-none fixed inset-0 z-[-10]">
+        <StarsBackground pointerEvents={false} speed={65} starColor="#dbeafe" />
+      </div>
+
+      <main className="relative min-h-[500vh] overflow-x-hidden z-10 pointer-events-none">
+        <FigurinesSides
+          storyState={storyState}
+          onTriggerStory={handleFigurineTrigger}
+          canTriggerStory={mapReady}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+        <ScrollGlobe
+          storyState={storyState}
+          onMapFullyInfected={handleMapFullyInfected}
+          onMapCleaned={handleMapCleaned}
+          onMapReadyChange={setMapReady}
+        />
+
+      {/* Re-enabled content section */}
+      <section className="mx-auto w-full max-w-4xl px-6 pb-24 pt-20 text-center">
+        <div className="relative z-20 mx-auto rounded-3xl bg-black/40 p-8 shadow-xl backdrop-blur-md ring-1 ring-white/10 sm:p-12">
+          <h1 className="text-4xl font-bold tracking-tight text-white md:text-6xl">
+            AI Fake News Detector for Romania
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mx-auto mt-6 max-w-2xl text-base text-zinc-300 md:text-lg">
+            Detect manipulated news, misinformation, and clickbait in Romanian online media
+            with real-time AI analysis built for everyday readers.
+          </p>
+          <p className="mx-auto mt-4 max-w-2xl text-sm text-zinc-400 md:text-base">
+            Browser extension and web platform for fact-checking signals, credibility scoring,
+            and safer digital reading.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {showActionButton ? (
+        <button
+          type="button"
+          onClick={handleActionButtonClick}
+          disabled={storyState === "cleaning"}
+          className="fixed bottom-8 left-1/2 z-[10000] -translate-x-1/2 rounded-full border border-white/15 bg-black/70 px-6 py-3 text-sm font-semibold tracking-wide text-white shadow-2xl backdrop-blur-md transition hover:bg-black/85 disabled:cursor-wait disabled:opacity-80 pointer-events-auto"
+        >
+          {actionButtonLabel}
+        </button>
+      ) : null}
+
+      {!mapReady ? (
+        <div className="fixed left-1/2 top-8 z-[10000] -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-zinc-200 backdrop-blur-md pointer-events-auto">
+          Scroll until Romania locks in to enable interaction
         </div>
+      ) : storyState === "idle" ? (
+        <div className="fixed left-1/2 top-8 z-[10000] -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-zinc-200 backdrop-blur-md pointer-events-auto">
+          Click a figurine to start the spread story
+        </div>
+      ) : null}
+
+        {/* Scroll runway so globe/figurines can react while page scrolls naturally */}
+        <div className="h-[400vh]" />
       </main>
-    </div>
+    </>
   );
 }
