@@ -80,10 +80,12 @@ export function FigurinesSides({
   storyState,
   onTriggerStory,
   canTriggerStory,
+  opacity = 1,
 }: {
   storyState: StoryState;
   onTriggerStory: () => void;
   canTriggerStory: boolean;
+  opacity?: number;
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -96,7 +98,11 @@ export function FigurinesSides({
   const interactive = canTriggerStory && (storyState === "idle" || storyState === "cleaned");
 
   const portal = (
-    <div className="pointer-events-none fixed inset-0 z-[9999] h-screen w-screen" aria-hidden="true">
+    <div
+      className="pointer-events-none fixed inset-0 z-[9999] h-screen w-screen transition-opacity duration-1000 ease-out"
+      style={{ opacity }}
+      aria-hidden="true"
+    >
       <Canvas
         className="pointer-events-auto h-full w-full"
         camera={{ position: [0, 1.15, 7.0], fov: 35 }}

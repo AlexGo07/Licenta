@@ -14,6 +14,7 @@ type ScrollGlobeProps = {
   onMapFullyInfected: () => void;
   onMapCleaned: () => void;
   onMapReadyChange: (isReady: boolean) => void;
+  opacity?: number;
 };
 
 const CITY_PINS = [
@@ -239,6 +240,7 @@ function GlobeModel({
 
   const GLOBE_FALLBACK_Z = -2.0;
   const IDLE_SCROLL_END = 0.18;
+  const MAP_SCROLL_PORTION = 0.5;
 
   useEffect(() => {
     if (storyState === "idle" || storyState === "spreading") {
@@ -265,11 +267,12 @@ function GlobeModel({
     // Calculate normalized scroll progress
     const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     const scrollProgress = Math.min((typeof window !== "undefined" ? window.scrollY : 0) / maxScroll, 1);
+    const mapPhaseProgress = Math.min(scrollProgress / MAP_SCROLL_PORTION, 1);
 
     // Phase 0: Idle spin only (no zoom) while SEO text still overlaps the globe.
     // After IDLE_SCROLL_END, remap the remaining scroll range to the old p1/p2 timeline.
     const adjustedScroll = THREE.MathUtils.clamp(
-      (scrollProgress - IDLE_SCROLL_END) / (1 - IDLE_SCROLL_END),
+      (mapPhaseProgress - IDLE_SCROLL_END) / (1 - IDLE_SCROLL_END),
       0,
       1,
     );
@@ -386,6 +389,7 @@ export function ScrollGlobe({
   onMapFullyInfected,
   onMapCleaned,
   onMapReadyChange,
+  opacity = 1,
 }: ScrollGlobeProps) {
   const [mounted, setMounted] = useState(false);
   const [scaleMultiplier, setScaleMultiplier] = useState(1);
@@ -407,7 +411,11 @@ export function ScrollGlobe({
   if (!mounted) return null;
 
   const portal = (
-    <div className="pointer-events-none fixed inset-0 z-0 h-screen w-screen" aria-hidden="true">
+    <div
+      className="pointer-events-none fixed inset-0 z-0 h-screen w-screen transition-opacity duration-1000 ease-out"
+      style={{ opacity }}
+      aria-hidden="true"
+    >
       <Canvas
         className="h-full w-full"
         camera={{ position: [0, 4.5, 3.5], fov: 35 }}
