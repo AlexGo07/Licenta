@@ -99,12 +99,16 @@ export function FigurinesSides({
 
   const portal = (
     <div
-      className="pointer-events-none fixed inset-0 z-[9999] h-screen w-screen transition-opacity duration-1000 ease-out"
-      style={{ opacity }}
+      className="fixed inset-0 z-[9999] h-screen w-screen transition-opacity duration-1000 ease-out"
+      style={{ 
+        opacity,
+        pointerEvents: opacity > 0 ? "auto" : "none",
+        display: opacity > 0 ? "block" : "none"
+      }}
       aria-hidden="true"
     >
       <Canvas
-        className="pointer-events-auto h-full w-full"
+        className="h-full w-full"
         camera={{ position: [0, 1.15, 7.0], fov: 35 }}
         gl={{ alpha: true, antialias: true }}
         style={{ touchAction: "pan-y" }}

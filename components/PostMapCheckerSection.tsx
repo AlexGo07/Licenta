@@ -86,11 +86,11 @@ export function PostMapCheckerSection() {
         <div className="w-full max-w-3xl relative z-20 mx-auto rounded-3xl bg-black/40 shadow-xl backdrop-blur-md ring-1 ring-white/10 sm:p-4">
           <GlowCard
           className="w-full"
-          glowColor="38 92 78"
+          glowColor="38 92 40"
           backgroundColor="transparent"
           borderRadius={24}
-          glowIntensity={0.85}
-          colors={["#22d3ee", "#38bdf8", "#0ea5e9"]}
+          glowIntensity={0.90}
+          colors={["#243B3F", "#152933", "#112630"]}
         >
           <div className="space-y-5 p-6 sm:p-8">
             <div>

@@ -142,7 +142,8 @@ export default function Home() {
         className="fixed inset-x-0 inset-y-0 z-[50] flex flex-col items-center justify-center transition-opacity duration-300 pointer-events-none"
         style={{ 
           opacity: checkerOpacity,
-          pointerEvents: checkerOpacity > 0.9 ? "auto" : "none"
+          pointerEvents: checkerOpacity > 0.1 ? "auto" : "none",
+          display: checkerOpacity > 0 ? "flex" : "none"
         }}
       >
         <PostMapCheckerSection />
@@ -152,7 +153,8 @@ export default function Home() {
         className="fixed inset-x-0 inset-y-0 z-[40] flex flex-col items-center justify-center transition-opacity duration-300 pointer-events-none"
         style={{ 
           opacity: swipeOpacity,
-          pointerEvents: swipeOpacity > 0.9 ? "auto" : "none"  
+          pointerEvents: swipeOpacity > 0.1 ? "auto" : "none",
+          display: swipeOpacity > 0 ? "flex" : "none"
         }}
       >
         <SwipeGameSection />

@@ -412,8 +412,12 @@ export function ScrollGlobe({
 
   const portal = (
     <div
-      className="pointer-events-none fixed inset-0 z-0 h-screen w-screen transition-opacity duration-1000 ease-out"
-      style={{ opacity }}
+      className="fixed inset-0 z-0 h-screen w-screen transition-opacity duration-1000 ease-out"
+      style={{ 
+        opacity,
+        pointerEvents: opacity > 0 ? "auto" : "none",
+        display: opacity > 0 ? "block" : "none"
+      }}
       aria-hidden="true"
     >
       <Canvas

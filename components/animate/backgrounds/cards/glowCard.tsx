@@ -205,7 +205,7 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
             'radial-gradient(ellipse at 33% 33%, black 5%, transparent 40%)',
             'radial-gradient(ellipse at 66% 33%, black 5%, transparent 40%)',
             'radial-gradient(ellipse at 33% 66%, black 5%, transparent 40%)',
-            `conic-gradient(from ${angleDeg} at center, transparent 5%, black 15%, black 85%, transparent 95%)`,
+            `gradient(from ${angleDeg} at center, transparent 20%, black 50%, black 50%, transparent 70%)`,
           ].join(', '),
           WebkitMaskImage: [
             'linear-gradient(to bottom, black, black)',
@@ -214,7 +214,7 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
             'radial-gradient(ellipse at 33% 33%, black 5%, transparent 40%)',
             'radial-gradient(ellipse at 66% 33%, black 5%, transparent 40%)',
             'radial-gradient(ellipse at 33% 66%, black 5%, transparent 40%)',
-            `conic-gradient(from ${angleDeg} at center, transparent 5%, black 15%, black 85%, transparent 95%)`,
+            `gradient(from ${angleDeg} at center, transparent 20%, black 50%, black 50%, transparent 70%)`,
           ].join(', '),
           maskComposite: 'subtract, add, add, add, add, add',
           WebkitMaskComposite: 'source-out, source-over, source-over, source-over, source-over, source-over',

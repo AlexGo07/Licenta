@@ -66,8 +66,8 @@ function SwipeCard({
       className="absolute inset-0 origin-bottom"
       style={{
         zIndex: MOCK_CARDS.length - index,
-        x: active ? x : 0,
-        rotate: active ? rotate : 0,
+        x,
+        rotate,
       }}
       drag={active ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
