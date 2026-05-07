@@ -89,8 +89,61 @@ export default function Home() {
         ? "Start over"
         : "Activate AI Filter";
 
+  const EXTENSION_DOWNLOAD_URL = "#";
+
+  const scrollToProgress = (progress: number) => {
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    window.scrollTo({
+      top: maxScroll * Math.min(Math.max(progress, 0), 1),
+      behavior: "smooth",
+    });
+  };
+
   return (
     <>
+      <nav className="fixed left-1/2 top-4 z-[10001] w-[calc(100%-1.5rem)] max-w-6xl -translate-x-1/2 rounded-2xl border border-white/15 bg-black/40 px-3 py-3 shadow-xl backdrop-blur-md ring-1 ring-white/10 sm:px-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => scrollToProgress(0)}
+            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/15 sm:text-sm"
+          >
+            Home
+          </button>
+
+          <button
+            type="button"
+            onClick={() => scrollToProgress(0.50)}  
+            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 sm:text-xs"
+          >
+            Why should I download
+          </button>
+
+          <button
+            type="button"
+            onClick={() => scrollToProgress(0.75)}
+            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 sm:text-xs"
+          >
+            Check Infromation
+          </button>
+
+          <button
+            type="button"
+            onClick={() => scrollToProgress(0.85)}
+            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 sm:text-xs"
+          >
+            Test your scepticism
+          </button>
+
+          <a
+            href={EXTENSION_DOWNLOAD_URL}
+            className="rounded-xl border border-white/40 bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/25 sm:text-sm"
+          >
+            Download extension
+          </a>
+        </div>
+      </nav>
+
       <div
         className="pointer-events-none fixed inset-0 z-[-20] transition-opacity duration-1000 ease-out"
         style={{ opacity: stageOpacity }}
