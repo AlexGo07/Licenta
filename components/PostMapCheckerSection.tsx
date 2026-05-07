@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense } from "react";
 import { useGLTF } from "@react-three/drei";
@@ -58,32 +58,91 @@ function ModelFrame({
 useGLTF.preload("/tik_tok_logo_with_true_topology.glb");
 useGLTF.preload("/coin.glb");
 
-function calculateRisk(text: string): number {
-  const normalized = text.trim().toLowerCase();
-  if (!normalized) return 0;
-
-  const sensationalTerms = ["soc", "urgent", "secret", "exclusiv", "imediat", "incredibil", "breaking"];
-  const matches = sensationalTerms.reduce((sum, term) => sum + (normalized.includes(term) ? 1 : 0), 0);
-  const punctuationWeight = Math.min(20, (normalized.match(/[!?]/g)?.length ?? 0) * 3);
-  const termWeight = matches * 11;
-  const lengthWeight = Math.min(28, Math.floor(normalized.length / 16));
-
-  return Math.min(100, 16 + punctuationWeight + termWeight + lengthWeight);
-}
+type PredictResponse = {
+  rezultat_final?: string;
+  incredere_model?: string;
+  rezultat_final_nou?: string;
+  incredere_model_nou?: string;
+  acord_modele?: boolean;
+  mod_analiza_folosit?: string;
+  modele_individuale?: {
+    titlu?: string;
+    text?: string;
+    text_vechi?: string;
+    text_nou?: string;
+    hibrid?: string;
+  };
+  error?: string;
+};
 
 export function PostMapCheckerSection() {
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const score = useMemo(() => calculateRisk(content), [content]);
-  const status = score < 35 ? "Likely reliable" : score < 70 ? "Needs verification" : "High fake-news risk";
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<PredictResponse | null>(null);
+  const [viewportHeight, setViewportHeight] = useState(1080);
+
+  useEffect(() => {
+    const updateViewportHeight = () => setViewportHeight(window.innerHeight);
+    updateViewportHeight();
+    window.addEventListener("resize", updateViewportHeight);
+    return () => window.removeEventListener("resize", updateViewportHeight);
+  }, []);
+
+  const scaleClass =
+    viewportHeight < 760
+      ? "scale-[0.76]"
+      : viewportHeight < 860
+        ? "scale-[0.84]"
+        : viewportHeight < 960
+          ? "scale-[0.90]"
+          : "scale-100";
+
+  const handleAnalyze = async () => {
+    const titlu = title.trim();
+    const text = content.trim();
+
+    if (!titlu && !text) {
+      setError("Introdu un titlu sau un text pentru analiză.");
+      setResult(null);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setResult(null);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titlu, text }),
+      });
+
+      const data = (await response.json()) as PredictResponse;
+
+      if (!response.ok) {
+        setError(data.error || "Analiza a eșuat.");
+        return;
+      }
+
+      setResult(data);
+    } catch {
+      setError("Nu mă pot conecta la backend. Verifică dacă serverul rulează pe http://127.0.0.1:8000.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 sm:px-10">
-      <div className="flex flex-col items-center justify-center gap-8 lg:flex-row lg:gap-10">
-        <div className="flex-shrink-0">
+    <section className={`mx-auto w-full max-w-7xl px-2 sm:px-4 lg:px-8 transform-gpu transition-transform duration-300 ${scaleClass}`}>
+      <div className="flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-5 xl:gap-6 2xl:gap-8">
+        <div className="hidden flex-shrink-0 lg:block lg:scale-75 xl:scale-90 2xl:scale-100">
           <ModelFrame url="/tik_tok_logo_with_true_topology.glb" rotationDirection={1} glow="#ff0050" scale={1.5} />
         </div>
 
-        <div className="w-full max-w-3xl relative z-20 mx-auto rounded-3xl bg-black/40 shadow-xl backdrop-blur-md ring-1 ring-white/10 sm:p-4">
+        <div className="relative z-20 mx-auto w-full max-w-[90vw] xl:max-w-4xl rounded-3xl bg-black/40 shadow-xl backdrop-blur-md ring-1 ring-white/10 sm:p-2">
           <GlowCard
           className="w-full"
           glowColor="38 92 40"
@@ -92,39 +151,82 @@ export function PostMapCheckerSection() {
           glowIntensity={0.90}
           colors={["#243B3F", "#152933", "#112630"]}
         >
-          <div className="space-y-5 p-6 sm:p-8">
+          <div className="space-y-3 p-4 sm:space-y-4 sm:p-5 lg:space-y-5 lg:p-7">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Romanian News Checker</h2>
-              <p className="mt-2 text-sm text-zinc-300 sm:text-base">
-                Paste a suspicious snippet and inspect the estimated disinformation risk.
+              <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl lg:text-3xl">Romanian News Checker</h2>
+              <p className="mt-1.5 text-xs text-zinc-300 sm:text-sm lg:text-base">
+                Introdu titlul și textul, apoi trimite la backend pentru verdictul modelului ensemble.
               </p>
             </div>
+
+            <input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Titlu știre..."
+              className="w-full rounded-2xl border border-white/20 bg-black/50 p-3 text-sm text-zinc-100 placeholder:text-zinc-400 backdrop-blur-md focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/35 transition-all shadow-inner sm:p-4"
+            />
 
             <textarea
               value={content}
               onChange={(event) => setContent(event.target.value)}
-              placeholder="Paste article text, headline, or social post..."
-              className="min-h-40 w-full resize-y rounded-2xl border border-white/20 bg-black/50 p-4 text-sm text-zinc-100 placeholder:text-zinc-400 backdrop-blur-md focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/35 transition-all shadow-inner"
+              placeholder="Introdu textul știrii..."
+              className="min-h-28 w-full resize-none rounded-2xl border border-white/20 bg-black/50 p-3 text-sm text-zinc-100 placeholder:text-zinc-400 backdrop-blur-md focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/35 transition-all shadow-inner sm:min-h-32 sm:p-4 lg:min-h-40"
             />
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-zinc-300">
-                <span>Fake-news probability</span>
-                <span>{score}%</span>
+            <button
+              type="button"
+              onClick={handleAnalyze}
+              disabled={loading}
+              className="w-full rounded-2xl border border-cyan-300/30 bg-cyan-500/20 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 transition hover:bg-cyan-400/25 disabled:cursor-wait disabled:opacity-70 sm:px-5 sm:py-3 sm:text-sm sm:tracking-[0.16em]"
+            >
+              {loading ? "Analizez..." : "Analizează"}
+            </button>
+
+            {error ? (
+              <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                {error}
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-zinc-800/80 ring-1 ring-white/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-500 transition-all duration-500"
-                  style={{ width: `${score}%` }}
-                />
+            ) : null}
+
+            {result ? (
+              <div className="space-y-3 rounded-2xl border border-white/15 bg-black/40 p-4">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="rounded-xl border border-cyan-300/20 bg-cyan-500/10 px-3 py-3 text-sm text-zinc-100">
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-cyan-200/90">Ensemble (text vechi)</p>
+                    <p className="mt-1 font-semibold">{result.rezultat_final || "N/A"}</p>
+                    <p className="text-xs text-zinc-300">Încredere: {result.incredere_model || "N/A"}</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-3 py-3 text-sm text-zinc-100">
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-emerald-200/90">Ensemble (text nou)</p>
+                    <p className="mt-1 font-semibold">{result.rezultat_final_nou || "N/A"}</p>
+                    <p className="text-xs text-zinc-300">Încredere: {result.incredere_model_nou || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="text-zinc-300">Comparare A/B:</span>
+                  <span className={`rounded-full px-3 py-1 font-semibold uppercase tracking-[0.12em] ${
+                    result.acord_modele ? "bg-emerald-500/20 text-emerald-200" : "bg-amber-500/20 text-amber-200"
+                  }`}>
+                    {result.acord_modele ? "Acord între modele" : "Verdicte diferite"}
+                  </span>
+                </div>
+                <div className="text-xs text-zinc-300">
+                  Strategie: {result.mod_analiza_folosit || "N/A"}
+                </div>
+
+                <div className="mt-2 border-t border-white/10 pt-3 text-xs text-zinc-300 space-y-1">
+                  <p>Titlu: {result.modele_individuale?.titlu || "N/A"}</p>
+                  <p>Text: {result.modele_individuale?.text || result.modele_individuale?.text_vechi || "N/A"}</p>
+                  {result.modele_individuale?.text_nou ? <p>Text (nou): {result.modele_individuale.text_nou}</p> : null}
+                  <p>Hibrid: {result.modele_individuale?.hibrid || "N/A"}</p>
+                </div>
               </div>
-              <p className="text-sm font-medium text-zinc-100">Status: {status}</p>
-            </div>
+            ) : null}
           </div>
         </GlowCard>
         </div>
 
-        <div className="flex-shrink-0">
+        <div className="hidden flex-shrink-0 lg:block lg:scale-75 xl:scale-90 2xl:scale-100">
           <ModelFrame url="/coin.glb" rotationDirection={-1} glow="#f59e0b" scale={0.08} />
         </div>
       </div>

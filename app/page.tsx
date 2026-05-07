@@ -76,8 +76,11 @@ export default function Home() {
     }
   };
 
+  // Action button should only be accessible while the map with red pins is on screen.
+  const redDotsVisible = mapReady && stageOpacity > 0.15 && checkerOpacity <= 0.05 && swipeOpacity <= 0.05;
+
   const showActionButton =
-    mapReady && (storyState === "readyToClean" || storyState === "cleaning" || storyState === "cleaned");
+    redDotsVisible && (storyState === "readyToClean" || storyState === "cleaning" || storyState === "cleaned");
 
   const actionButtonLabel =
     storyState === "cleaning"
@@ -139,7 +142,7 @@ export default function Home() {
         These will fade in and out exactly where the user is looking without scrolling away.
       */}
       <div 
-        className="fixed inset-x-0 inset-y-0 z-[50] flex flex-col items-center justify-center transition-opacity duration-300 pointer-events-none"
+        className="fixed inset-x-0 inset-y-0 z-[50] flex flex-col items-center justify-center px-2 py-4 sm:px-4 sm:py-6 transition-opacity duration-300 pointer-events-none"
         style={{ 
           opacity: checkerOpacity,
           pointerEvents: checkerOpacity > 0.1 ? "auto" : "none",
@@ -159,6 +162,10 @@ export default function Home() {
       >
         <SwipeGameSection />
       </div>
+
+        {/* Final runway for lower-page pacing */}
+        <div className="h-[140vh]" />
+      </main>
 
       {showActionButton ? (
         <button
@@ -180,10 +187,6 @@ export default function Home() {
           Click a figurine to start the spread story
         </div>
       ) : null}
-
-        {/* Final runway for lower-page pacing */}
-        <div className="h-[140vh]" />
-      </main>
     </>
   );
 }
