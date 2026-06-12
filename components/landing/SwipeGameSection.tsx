@@ -216,6 +216,17 @@ export function SwipeGameSection() {
   const [score, setScore] = useState(0);
   const [swipeFeedback, setSwipeFeedback] = useState<null | { correct: boolean }>(null);
 
+  const shuffleCards = (items: StoryCard[]) => {
+    const shuffled = [...items];
+
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    }
+
+    return shuffled;
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -227,8 +238,8 @@ export function SwipeGameSection() {
         const payload = (await response.json()) as StoryCard[];
         if (!Array.isArray(payload) || payload.length === 0) return;
 
-        // Keep UI snappy: load a deck window first.
-        const deck = payload.slice(0, 120);
+        // Keep UI snappy: shuffle first, then load a deck window.
+        const deck = shuffleCards(payload).slice(0, 120);
 
         if (mounted) {
           setAllCards(deck);

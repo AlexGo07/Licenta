@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useProgress } from "@react-three/drei";
+import InfoModal from "../components/landing/InfoModal";
 import { FigurinesSides } from "@/components/FigurinesSides";
 import { PostMapCheckerSection } from "@/components/PostMapCheckerSection";
 import { ScrollGlobe } from "@/components/ScrollGlobe";
@@ -10,17 +12,93 @@ import LightBackground from "../components/animate/backgrounds/lightbackground";
 
 type StoryState = "idle" | "spreading" | "readyToClean" | "cleaning" | "cleaned";
 
+function ThreeDLoadingScreen({ onReady }: { onReady: (ready: boolean) => void }) {
+  const { active, loaded, total, progress } = useProgress();
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [fadeOut, setFadeOut] = useState(false);
+
+  useEffect(() => {
+    const loadingInProgress = active || loaded === 0 || progress < 100;
+
+    if (loadingInProgress) {
+      setShowOverlay(true);
+      setFadeOut(false);
+      onReady(false);
+      return undefined;
+    }
+
+    const fadeTimer = window.setTimeout(() => {
+      setFadeOut(true);
+      onReady(true);
+
+      window.setTimeout(() => {
+        setShowOverlay(false);
+      }, 700);
+    }, 350);
+
+    return () => window.clearTimeout(fadeTimer);
+  }, [active, loaded, onReady, progress, total]);
+
+  useEffect(() => {
+    document.body.style.overflow = showOverlay ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showOverlay]);
+
+  if (!showOverlay) {
+    return null;
+  }
+
+  const percent = Math.max(0, Math.min(100, Math.round(progress)));
+
+  return (
+    <div
+      className={`fixed inset-0 z-[20000] flex items-center justify-center bg-[#050816] px-6 transition-opacity duration-700 ${fadeOut ? "opacity-0" : "opacity-100"}`}
+      aria-live="polite"
+      aria-label="Loading 3D models"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.14),_transparent_42%),linear-gradient(180deg,_rgba(5,8,22,0.98),_rgba(8,12,32,0.98))]" />
+      <div className="relative flex w-full max-w-md flex-col items-center rounded-3xl border border-white/10 bg-black/35 px-8 py-10 text-center shadow-2xl backdrop-blur-xl">
+        <div className="mb-5 h-16 w-16 rounded-full border border-white/15 border-t-white/80 animate-spin" />
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">
+          Loading experience
+        </p>
+        <h1 className="mt-3 text-2xl font-bold text-white md:text-3xl">
+          Preparing the 3D models
+        </h1>
+        <p className="mt-3 max-w-sm text-sm leading-6 text-white/70 md:text-base">
+          We are loading the globe, characters, and checker scene so the page is ready before you start scrolling.
+        </p>
+        <div className="mt-8 w-full overflow-hidden rounded-full border border-white/10 bg-white/10">
+          <div
+            className="h-2 rounded-full bg-gradient-to-r from-cyan-300 via-sky-400 to-white transition-[width] duration-300 ease-out"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        <div className="mt-4 flex w-full items-center justify-between text-xs uppercase tracking-[0.22em] text-white/55">
+          <span>{percent}%</span>
+          <span>{loaded > 0 ? `${loaded}/${Math.max(total, loaded)} assets` : "Starting"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
+  const [dismissedInWindow, setDismissedInWindow] = useState(false);
   const [storyState, setStoryState] = useState<StoryState>("idle");
   const [mapReady, setMapReady] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isBootReady, setIsBootReady] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       setScrollProgress(Math.min(window.scrollY / maxScroll, 1));
     };
-
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
@@ -52,6 +130,18 @@ export default function Home() {
   // Swipe logic
   const swipeRevealProgress = Math.max(0, Math.min((scrollProgress - SWIPE_START) / (SWIPE_END - SWIPE_START), 1));
   const swipeOpacity = swipeRevealProgress;
+
+  const MODAL_WINDOW_START = Math.max(0, MAP_HOLD_END - 0.02);
+  const MODAL_WINDOW_END = MAP_HOLD_END + 0.02;
+
+  const shouldShowIntroModal = !dismissedInWindow && scrollProgress >= MODAL_WINDOW_START && scrollProgress <= MODAL_WINDOW_END;
+
+  useEffect(() => {
+    if (scrollProgress < MODAL_WINDOW_START || scrollProgress > MODAL_WINDOW_END) {
+      // reset dismissal when user scrolls outside the modal window so it can reappear later
+      setDismissedInWindow(false);
+    }
+  }, [scrollProgress]);
 
   const handleFigurineTrigger = () => {
     setStoryState("spreading");
@@ -97,24 +187,45 @@ export default function Home() {
       top: maxScroll * Math.min(Math.max(progress, 0), 1),
       behavior: "smooth",
     });
+    setIsNavOpen(false);
   };
+
+  const safeCheckerOpacity = typeof checkerOpacity === "number" ? checkerOpacity : 0;
+  const safeSwipeOpacity = typeof swipeOpacity === "number" ? swipeOpacity : 0;
 
   return (
     <>
-      <nav className="fixed left-1/2 top-4 z-[10001] w-[calc(100%-1.5rem)] max-w-6xl -translate-x-1/2 rounded-2xl border border-white/15 bg-black/40 px-3 py-3 shadow-xl backdrop-blur-md ring-1 ring-white/10 sm:px-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+      {/* Info modal shown just before the map hold ends */}
+      <InfoModal open={shouldShowIntroModal} onClose={() => setDismissedInWindow(true)} />
+      <ThreeDLoadingScreen onReady={setIsBootReady} />
+
+      {/* Mobile: Only hamburger button */}
+      <button
+        type="button"
+        onClick={() => setIsNavOpen(!isNavOpen)}
+        disabled={!isBootReady}
+        className="fixed left-4 top-6 z-[10001] flex flex-col items-center justify-center space-y-1.5 p-2 text-white transition-opacity md:hidden disabled:pointer-events-none disabled:opacity-0"
+      >
+        <span className={`block h-[2px] w-6 bg-white transition-transform duration-300 ${isNavOpen ? "translate-y-[8px] rotate-45" : ""}`}></span>
+        <span className={`block h-[2px] w-6 bg-white transition-opacity duration-300 ${isNavOpen ? "opacity-0" : ""}`}></span>
+        <span className={`block h-[2px] w-6 bg-white transition-transform duration-300 ${isNavOpen ? "-translate-y-[8px] -rotate-45" : ""}`}></span>
+      </button>
+
+      {/* Mobile dropdown menu */}
+      {isNavOpen && isBootReady && (
+        <div className="fixed left-0 right-0 top-16 z-[10000] flex flex-col gap-2 border-b border-white/15 bg-black/85 px-4 py-4 backdrop-blur-md md:hidden">
           <button
             type="button"
             onClick={() => scrollToProgress(0)}
-            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/15 sm:text-sm"
+            className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/15"
           >
             Home
           </button>
 
           <button
             type="button"
-            onClick={() => scrollToProgress(0.50)}  
-            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 sm:text-xs"
+            onClick={() => scrollToProgress(MAP_HOLD_END)}  
+            className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15"
           >
             Why should I download
           </button>
@@ -122,26 +233,72 @@ export default function Home() {
           <button
             type="button"
             onClick={() => scrollToProgress(0.75)}
-            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 sm:text-xs"
+            className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15"
           >
-            Check Infromation
+            Check Information
           </button>
 
           <button
             type="button"
             onClick={() => scrollToProgress(0.85)}
-            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 sm:text-xs"
+            className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15"
           >
             Test your scepticism
           </button>
 
           <a
             href={EXTENSION_DOWNLOAD_URL}
-            className="rounded-xl border border-white/40 bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/25 sm:text-sm"
+            className="w-full block text-center rounded-xl border border-white/40 bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/25"
           >
             Download extension
           </a>
         </div>
+      )}
+
+      {/* Desktop navbar */}
+      <nav className="hidden left-1/2 top-4 z-[10001] w-[calc(100%-1.5rem)] max-w-6xl -translate-x-1/2 rounded-2xl border border-white/15 bg-black/40 px-3 py-3 shadow-xl backdrop-blur-md ring-1 ring-white/10 sm:px-4 transition-all duration-300 md:fixed md:flex md:flex-wrap md:items-center md:justify-between md:gap-2 lg:gap-3">
+        <button
+          type="button"
+          onClick={() => scrollToProgress(0)}
+          disabled={!isBootReady}
+          className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/15 disabled:pointer-events-none disabled:opacity-0 sm:text-sm"
+        >
+          Home
+        </button>
+
+        <button
+          type="button"
+          onClick={() => scrollToProgress(MAP_HOLD_END)}  
+          disabled={!isBootReady}
+          className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 disabled:pointer-events-none disabled:opacity-0 sm:text-xs"
+        >
+          Why should I download
+        </button>
+
+        <button
+          type="button"
+          onClick={() => scrollToProgress(0.75)}
+          disabled={!isBootReady}
+          className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 disabled:pointer-events-none disabled:opacity-0 sm:text-xs"
+        >
+          Check Information
+        </button>
+
+        <button
+          type="button"
+          onClick={() => scrollToProgress(0.85)}
+          disabled={!isBootReady}
+          className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-white/15 disabled:pointer-events-none disabled:opacity-0 sm:text-xs"
+        >
+          Test your scepticism
+        </button>
+
+        <a
+          href={EXTENSION_DOWNLOAD_URL}
+          className={`rounded-xl border border-white/40 bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/25 sm:text-sm ${isBootReady ? "" : "pointer-events-none opacity-50"}`}
+        >
+          Download extension
+        </a>
       </nav>
 
       <div
@@ -158,7 +315,7 @@ export default function Home() {
         <LightBackground raysOrigin="top-center" raysColor="#ffffff" raysSpeed={0.7} lightSpread={1.15} rayLength={2.4} saturation={1.04} distortion={0.08} noiseAmount={0.01} followMouse={false} />
       </div>
 
-      <main className="relative z-10 min-h-[600vh] overflow-x-hidden">
+      <main className={`relative z-10 min-h-[600vh] overflow-x-hidden transition-opacity duration-700 ${isBootReady ? "opacity-100" : "pointer-events-none opacity-0"}`}>
         <FigurinesSides
           storyState={storyState}
           onTriggerStory={handleFigurineTrigger}
@@ -197,9 +354,9 @@ export default function Home() {
       <div 
         className="fixed inset-x-0 inset-y-0 z-[50] flex flex-col items-center justify-center px-2 py-4 sm:px-4 sm:py-6 transition-opacity duration-300 pointer-events-none"
         style={{ 
-          opacity: checkerOpacity,
-          pointerEvents: checkerOpacity > 0.1 ? "auto" : "none",
-          display: checkerOpacity > 0 ? "flex" : "none"
+          opacity: safeCheckerOpacity,
+          pointerEvents: safeCheckerOpacity > 0.1 ? "auto" : "none",
+          display: safeCheckerOpacity > 0 ? "flex" : "none"
         }}
       >
         <PostMapCheckerSection />
@@ -208,9 +365,9 @@ export default function Home() {
       <div 
         className="fixed inset-x-0 inset-y-0 z-[40] flex flex-col items-center justify-center transition-opacity duration-300 pointer-events-none"
         style={{ 
-          opacity: swipeOpacity,
-          pointerEvents: swipeOpacity > 0.1 ? "auto" : "none",
-          display: swipeOpacity > 0 ? "flex" : "none"
+          opacity: safeSwipeOpacity,
+          pointerEvents: safeSwipeOpacity > 0.1 ? "auto" : "none",
+          display: safeSwipeOpacity > 0 ? "flex" : "none"
         }}
       >
         <SwipeGameSection />
