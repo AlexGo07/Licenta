@@ -387,16 +387,6 @@ export default function Home() {
           {actionButtonLabel}
         </button>
       ) : null}
-
-      {!mapReady ? (
-        <div className="fixed left-1/2 top-8 z-[10000] -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-zinc-200 backdrop-blur-md pointer-events-auto">
-          Scroll until Romania locks in to enable interaction
-        </div>
-      ) : storyState === "idle" ? (
-        <div className="fixed left-1/2 top-8 z-[10000] -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-zinc-200 backdrop-blur-md pointer-events-auto">
-          Click a figurine to start the spread story
-        </div>
-      ) : null}
     </>
   );
 }

@@ -104,7 +104,7 @@ export function PostMapCheckerSection() {
     const text = content.trim();
 
     if (!titlu && !text) {
-      setError("Introdu un titlu sau un text pentru analiză.");
+      setError("Enter a title or text for analysis.");
       setResult(null);
       return;
     }
@@ -123,13 +123,13 @@ export function PostMapCheckerSection() {
       const data = (await response.json()) as PredictResponse;
 
       if (!response.ok) {
-        setError(data.error || "Analiza a eșuat.");
+        setError(data.error || "Analysis failed.");
         return;
       }
 
       setResult(data);
     } catch {
-      setError("Nu mă pot conecta la backend. Verifică dacă serverul rulează pe http://127.0.0.1:8000.");
+      setError("Cannot connect to the backend. Check if the server is running on http://127.0.0.1:8000.");
     } finally {
       setLoading(false);
     }
@@ -155,21 +155,21 @@ export function PostMapCheckerSection() {
             <div>
               <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl lg:text-3xl">Romanian News Checker</h2>
               <p className="mt-1.5 text-xs text-zinc-300 sm:text-sm lg:text-base">
-                Introdu titlul și textul, apoi trimite la backend pentru verdictul modelului ensemble.
+                Enter the title and text, then send to the backend for the ensemble model verdict.
               </p>
             </div>
 
             <input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="Titlu știre..."
+              placeholder="News title..."
               className="w-full rounded-2xl border border-white/20 bg-black/50 p-3 text-sm text-zinc-100 placeholder:text-zinc-400 backdrop-blur-md focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/35 transition-all shadow-inner sm:p-4"
             />
 
             <textarea
               value={content}
               onChange={(event) => setContent(event.target.value)}
-              placeholder="Introdu textul știrii..."
+              placeholder="Enter news text..."
               className="min-h-28 w-full resize-none rounded-2xl border border-white/20 bg-black/50 p-3 text-sm text-zinc-100 placeholder:text-zinc-400 backdrop-blur-md focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/35 transition-all shadow-inner sm:min-h-32 sm:p-4 lg:min-h-40"
             />
 
@@ -179,7 +179,7 @@ export function PostMapCheckerSection() {
               disabled={loading}
               className="w-full rounded-2xl border border-cyan-300/30 bg-cyan-500/20 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 transition hover:bg-cyan-400/25 disabled:cursor-wait disabled:opacity-70 sm:px-5 sm:py-3 sm:text-sm sm:tracking-[0.16em]"
             >
-              {loading ? "Analizez..." : "Analizează"}
+              {loading ? "Analyzing..." : "Analyze"}
             </button>
 
             {error ? (
@@ -192,33 +192,33 @@ export function PostMapCheckerSection() {
               <div className="space-y-3 rounded-2xl border border-white/15 bg-black/40 p-4">
                 <div className="grid gap-2 sm:grid-cols-2">
                   <div className="rounded-xl border border-cyan-300/20 bg-cyan-500/10 px-3 py-3 text-sm text-zinc-100">
-                    <p className="text-[11px] uppercase tracking-[0.14em] text-cyan-200/90">Ensemble (text vechi)</p>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-cyan-200/90">Ensemble (old text)</p>
                     <p className="mt-1 font-semibold">{result.rezultat_final || "N/A"}</p>
-                    <p className="text-xs text-zinc-300">Încredere: {result.incredere_model || "N/A"}</p>
+                    <p className="text-xs text-zinc-300">Confidence: {result.incredere_model || "N/A"}</p>
                   </div>
                   <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-3 py-3 text-sm text-zinc-100">
-                    <p className="text-[11px] uppercase tracking-[0.14em] text-emerald-200/90">Ensemble (text nou)</p>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-emerald-200/90">Ensemble (new text)</p>
                     <p className="mt-1 font-semibold">{result.rezultat_final_nou || "N/A"}</p>
-                    <p className="text-xs text-zinc-300">Încredere: {result.incredere_model_nou || "N/A"}</p>
+                    <p className="text-xs text-zinc-300">Confidence: {result.incredere_model_nou || "N/A"}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="text-zinc-300">Comparare A/B:</span>
+                  <span className="text-zinc-300">A/B Comparison:</span>
                   <span className={`rounded-full px-3 py-1 font-semibold uppercase tracking-[0.12em] ${
                     result.acord_modele ? "bg-emerald-500/20 text-emerald-200" : "bg-amber-500/20 text-amber-200"
                   }`}>
-                    {result.acord_modele ? "Acord între modele" : "Verdicte diferite"}
+                    {result.acord_modele ? "Models in agreement" : "Different verdicts"}
                   </span>
                 </div>
                 <div className="text-xs text-zinc-300">
-                  Strategie: {result.mod_analiza_folosit || "N/A"}
+                  Strategy: {result.mod_analiza_folosit || "N/A"}
                 </div>
 
                 <div className="mt-2 border-t border-white/10 pt-3 text-xs text-zinc-300 space-y-1">
-                  <p>Titlu: {result.modele_individuale?.titlu || "N/A"}</p>
+                  <p>Title: {result.modele_individuale?.titlu || "N/A"}</p>
                   <p>Text: {result.modele_individuale?.text || result.modele_individuale?.text_vechi || "N/A"}</p>
-                  {result.modele_individuale?.text_nou ? <p>Text (nou): {result.modele_individuale.text_nou}</p> : null}
-                  <p>Hibrid: {result.modele_individuale?.hibrid || "N/A"}</p>
+                  {result.modele_individuale?.text_nou ? <p>Text (new): {result.modele_individuale.text_nou}</p> : null}
+                  <p>Hybrid: {result.modele_individuale?.hibrid || "N/A"}</p>
                 </div>
               </div>
             ) : null}
