@@ -37,12 +37,6 @@ export default function InfoModal({
               the map and how problematic points can be identified.
             </p>
           </div>
-
-          <div className="flex-shrink-0 pl-4">
-            <div className="h-24 w-24 rounded-lg bg-gradient-to-br from-cyan-500/30 to-emerald-400/20 border border-white/10 flex items-center justify-center">
-              <span className="text-sm font-semibold text-white/90">Demo</span>
-            </div>
-          </div>
         </div>
 
         <div className="mt-6 flex justify-end">

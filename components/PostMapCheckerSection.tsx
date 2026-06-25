@@ -190,25 +190,12 @@ export function PostMapCheckerSection() {
 
             {result ? (
               <div className="space-y-3 rounded-2xl border border-white/15 bg-black/40 p-4">
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-2 sm:grid-cols-1">
                   <div className="rounded-xl border border-cyan-300/20 bg-cyan-500/10 px-3 py-3 text-sm text-zinc-100">
-                    <p className="text-[11px] uppercase tracking-[0.14em] text-cyan-200/90">Ensemble (old text)</p>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-cyan-200/90">Ensemble</p>
                     <p className="mt-1 font-semibold">{result.rezultat_final || "N/A"}</p>
                     <p className="text-xs text-zinc-300">Confidence: {result.incredere_model || "N/A"}</p>
                   </div>
-                  <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-3 py-3 text-sm text-zinc-100">
-                    <p className="text-[11px] uppercase tracking-[0.14em] text-emerald-200/90">Ensemble (new text)</p>
-                    <p className="mt-1 font-semibold">{result.rezultat_final_nou || "N/A"}</p>
-                    <p className="text-xs text-zinc-300">Confidence: {result.incredere_model_nou || "N/A"}</p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="text-zinc-300">A/B Comparison:</span>
-                  <span className={`rounded-full px-3 py-1 font-semibold uppercase tracking-[0.12em] ${
-                    result.acord_modele ? "bg-emerald-500/20 text-emerald-200" : "bg-amber-500/20 text-amber-200"
-                  }`}>
-                    {result.acord_modele ? "Models in agreement" : "Different verdicts"}
-                  </span>
                 </div>
                 <div className="text-xs text-zinc-300">
                   Strategy: {result.mod_analiza_folosit || "N/A"}
@@ -217,7 +204,6 @@ export function PostMapCheckerSection() {
                 <div className="mt-2 border-t border-white/10 pt-3 text-xs text-zinc-300 space-y-1">
                   <p>Title: {result.modele_individuale?.titlu || "N/A"}</p>
                   <p>Text: {result.modele_individuale?.text || result.modele_individuale?.text_vechi || "N/A"}</p>
-                  {result.modele_individuale?.text_nou ? <p>Text (new): {result.modele_individuale.text_nou}</p> : null}
                   <p>Hybrid: {result.modele_individuale?.hibrid || "N/A"}</p>
                 </div>
               </div>
